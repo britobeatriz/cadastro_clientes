@@ -3,26 +3,29 @@ Option Explicit
 Sub scrapApi()
     'Pesquisar o cep
     
-    Dim api As New MSXML2.ServerXMLHTTP60
-    Dim html As New MSHTML.HTMLDocument
-    Dim url As String
+    Dim req As New XMLHTTP60
     Dim cep As String
     
-    cep = FormIncluir.TextCep.Value
-    url = "https://viacep.com.br/ws/" & cep & "/xml/"
+    cep = FormIncluir.TextCep
     
-    api.Open "GET", url
-    api.send
+     
+        
+With req
+    .Open "GET", "https://viacep.com.br/ws/" & cep & "/xml/"
+    .send
+End With
+
+On Error GoTo invalido
     
-    On Error GoTo invalido
-    
-    html.body.innerHTML = api.responseText
-   
-    FormIncluir.TextRua.Value = html.getElementsByTagName("logradouro")(0).innerText
-    FormIncluir.TextBairro.Value = html.getElementsByTagName("bairro")(0).innerText
-    FormIncluir.TextEstado.Value = html.getElementsByTagName("uf")(0).innerText
-    FormIncluir.TextCidade.Value = html.getElementsByTagName("localidade")(0).innerText
-    Exit Sub
+With Application.WorksheetFunction
+    FormIncluir.TextRua.Value = .FilterXML(req.responseText, "//xmlcep/logradouro")
+    FormIncluir.TextBairro.Value = .FilterXML(req.responseText, "//xmlcep/bairro")
+    FormIncluir.TextEstado.Value = .FilterXML(req.responseText, "//xmlcep/uf")
+    FormIncluir.TextCidade.Value = .FilterXML(req.responseText, "//xmlcep/localidade")
+End With
+
+      
+   Exit Sub
     
 invalido:
     FormIncluir.TextRua.Value = ""
